@@ -10,10 +10,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@aptos-labs/ts-sdk": "^1.33.0",
+    "@emotion/react": "^11.13.5",
+    "@emotion/styled": "^11.13.5",
+    "@mui/icons-material": "^6.1.9",
+    "@mui/material": "^6.1.9",
+    "@telegram-apps/telegram-ui": "^2.1.8",
     "@twa-dev/sdk": "^6.7.1",
+    "@types/leaflet": "^1.9.14",
+    "@types/react-leaflet": "^3.0.0",
     "@vitejs/plugin-basic-ssl": "^1.0.1",
+    "aptos": "^1.21.0",
+    "leaflet": "^1.9.4",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-leaflet": "^4.2.1"
   },
   "devDependencies": {
     "@types/react": "^18.2.15",
