@@ -16,41 +16,57 @@ export const generateWaldoLocations = (
     lng: generateRandomCoordinate(centerLng, 0.1),
   }));
 };
-
+let isMinting = false;
 export const mintWaldoNFT = async (
   client: AptosClient,
   account: AptosAccount,
   location: { lat: number; lng: number }
 ): Promise<NFTAsset> => {
-  const moduleAddress = import.meta.env.VITE_APTOS_MODULE_ADDRESS;
-  
-  if (!moduleAddress) {
-    throw new Error('Module address not found in environment variables');
+  if (isMinting) {
+    throw new Error('Minting is already in progress. Please wait.');
   }
-
-  const payload: Types.TransactionPayload = {
-    type: "entry_function_payload",
-    function: `${moduleAddress}::waldo_nft::mint_waldo`,  // Updated function name
-    type_arguments: [],
-    arguments: [
-      location.lat.toString(),  // Convert coordinates to strings
-      location.lng.toString()
-    ]
-  };
-
-  const txnRequest = await client.generateTransaction(account.address(), payload);
-  const signedTxn = await client.signTransaction(account, txnRequest);
-  const response = await client.submitTransaction(signedTxn);
-  await client.waitForTransaction(response.hash);
+  isMinting = true;
   
-  return {
-    id: response.hash,
-    name: 'Waldo',
-    location,
-    rarity: 'common',
-    imageUrl: `https://api.example.com/waldo?lat=${location.lat}&lng=${location.lng}`,
-    collectedTs: undefined
-  };
+  try {
+    const moduleAddress = import.meta.env.VITE_APTOS_MODULE_ADDRESS;
+
+    if (!moduleAddress) {
+      throw new Error('Module address not found in environment variables');
+    }
+
+    const payload: Types.TransactionPayload = {
+      type: "entry_function_payload",
+      function: `${moduleAddress}::waldo_nft::mint_waldo`,
+      type_arguments: [],
+      arguments: [
+        location.lat.toString(),
+        location.lng.toString()
+      ]
+    };
+
+    const txnRequest = await client.generateTransaction(account.address(), payload);
+    const signedTxn = await client.signTransaction(account, txnRequest);
+    const response = await client.submitTransaction(signedTxn);
+
+    await client.waitForTransaction(response.hash);
+
+    return {
+      id: response.hash,
+      name: 'Waldo',
+      location,
+      rarity: 'common',
+      imageUrl: `https://api.example.com/waldo?lat=${location.lat}&lng=${location.lng}`,
+      collectedTs: undefined
+    };
+  } catch (error: any) {
+    if (error.message.includes('Transaction already in mempool')) {
+      throw new Error('A transaction is already pending. Please wait for it to complete before minting again.');
+    }
+    console.error('Error minting Waldo NFT:', error);
+    throw error;
+  } finally {
+    isMinting = false;
+  }
 };
 
 export const fetchExistingWaldos = async (

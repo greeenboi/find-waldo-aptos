@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from 'react';
@@ -14,6 +15,21 @@ const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('map');
   const [nfts, setNfts] = useState<NFTAsset[]>([]);
   const [isInitializing, setIsInitializing] = useState(true);
+  const [isMinting, setIsMinting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleMint = async (location: { lat: number; lng: number }) => {
+    setIsMinting(true);
+    setError(null);
+    try {
+      const nft = await mintWaldoNFT(client, account!, location);
+      setNfts([...nfts, nft]); // Update your NFTs list
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsMinting(false);
+    }
+  };
   
   // Initialize Aptos client and account
   const client = React.useMemo(() => getAptosClient(), []);
@@ -99,6 +115,20 @@ const App: React.FC = () => {
           <Box>Leaderboard</Box>
         )}
       </Box>
+      <button onClick={() => handleMint({ lat: 40.7128, lng: -74.0060 })} disabled={isMinting}>
+        {isMinting ? 'Minting...' : 'Mint Waldo NFT'}
+      </button>
+      {error && <p style={{ color: 'red' }}>Error: {error}</p>}
+      {/* Render NFTs */}
+      <div>
+        {nfts.map((nft) => (
+          <div key={nft.id}>
+            <h3>{nft.name}</h3>
+            <p>Location: {nft.location.lat}, {nft.location.lng}</p>
+            <img src={nft.imageUrl} alt={nft.name} />
+          </div>
+        ))}
+      </div>
       
       <BottomNavigation
         value={activeTab}

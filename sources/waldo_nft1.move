@@ -1,5 +1,5 @@
 module waldo_nft_addr::waldo_nft {
-    use aptos_stdlib::signer::Signer;
+    use std::signer;
     use aptos_token::token;
     use std::string;
     use std::vector;
@@ -10,7 +10,7 @@ module waldo_nft_addr::waldo_nft {
     }
 
     public entry fun mint_waldo(
-        account: &Signer,
+        account: &signer,
         latitude: string::String,
         longitude: string::String,
     ) {
@@ -19,37 +19,36 @@ module waldo_nft_addr::waldo_nft {
         let description = string::utf8(b"A Waldo NFT");
         let token_uri = string::utf8(b"https://api.example.com/waldo/metadata");
 
+        let creator_address = signer::address_of(account);
+
         // Create collection if it doesn't exist
-        if (!token::exists_collection(account, &collection_name)) {
-            token::create_collection(
+        if (!token::check_collection_exists(creator_address, collection_name)) {
+            token::create_collection_script(
                 account,
-                collection_name.clone(),
-                description.clone(),
-                token_uri.clone(),
-                1000,  // max_supply
-                vector::empty<u8>(),                 // royalty_payee_address
-                0,                                   // royalty_points_denominator
-                0,                                   // royalty_points_numerator
-                vector::empty<token::PropertyMap>(), // default_properties
-                false                                // allow_mutable_description
+                collection_name,
+                description,
+                token_uri,
+                1000,  // max supply
+                vector[true, true, true]  // mutate flags
             );
         };
 
-        // Mint the token
-        token::create_token(
+        // Mint the token with full parameters
+        token::create_token_script(
             account,
             collection_name,
             token_name,
             description,
-            1,                                    // supply
-            0,                                    // max_supply
+            1,  // supply
+            0,  // max supply
             token_uri,
-            vector::empty<u8>(),                  // royalty_payee_address
-            0,                                    // royalty_points_denominator
-            0,                                    // royalty_points_numerator
-            vector::empty<token::PropertyMap>(),  // properties
-            false,                                // allow_mutable_description
-            false                                 // allow_mutable_uri
+            signer::address_of(account),  // royalty payee
+            1,  // royalty points denominator
+            0,  // royalty points numerator 
+            vector::empty(),  // empty property list
+             vector::empty(),  // property version
+             vector::empty(),  // mutate description
+             vector::empty()   // mutate uri
         );
     }
 }
