@@ -1,0 +1,16 @@
+[package]
+name = "waldo_nft1"
+version = "1.0.0"
+authors = ["greeenboi <contact@suvangs.tech>"]
+
+[addresses]
+waldo_nft_addr="0x5dd1acc4bdf8d91f1d37eafbd397597ac592161004d10597b104558b7abf0f2f"
+aptos_framework = "0x1"
+aptos_token = "0x3"
+aptos_stdlib = "0x2"
+
+[dependencies]
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "mainnet" }
+AptosToken = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-token/", rev = "mainnet" }
+AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib/", rev = "mainnet" }
+
