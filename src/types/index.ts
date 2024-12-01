@@ -2,15 +2,14 @@
 export interface NFTAsset {
   id: string;
   name: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
   location: {
     lat: number;
     lng: number;
   };
+  rarity: string;
   imageUrl: string;
-  collected: boolean;
+  collectedTs?: number; // Optional timestamp for when NFT was collected
 }
-
 export interface UserProfile {
   walletAddress: string;
   collectedNFTs: string[];

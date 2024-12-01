@@ -1,28 +1,90 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React from 'react';
+import React, { useState } from 'react';
 import { Container, Box, BottomNavigation, BottomNavigationAction } from '@mui/material';
 import MapIcon from '@mui/icons-material/Map';
 import CollectionsIcon from '@mui/icons-material/Collections';
 import LeaderboardIcon from '@mui/icons-material/Leaderboard';
 import { Map } from './components/Map';
-import { AptosClient } from 'aptos';
 import { NFTAsset } from './types';
+import { generateWaldoLocations, mintWaldoNFT, fetchExistingWaldos, collectNFT } from './utils/nft-operations';
+import { initializeAccount, getAptosClient } from './utils/account';
 
 const App: React.FC = () => {
-  const [activeTab, setActiveTab] = React.useState('map');
-  const [nfts, setNfts] = React.useState<NFTAsset[]>([]);
+  const [activeTab, setActiveTab] = useState('map');
+  const [nfts, setNfts] = useState<NFTAsset[]>([]);
+  const [isInitializing, setIsInitializing] = useState(true);
   
-  // Initialize Aptos client
-  const client = new AptosClient('https://fullnode.devnet.aptoslabs.com');
+  // Initialize Aptos client and account
+  const client = React.useMemo(() => getAptosClient(), []);
+  const account = React.useMemo(() => {
+    try {
+      return initializeAccount();
+    } catch (error) {
+      console.error('Failed to initialize account:', error);
+      return null;
+    }
+  }, []);
+
+  React.useEffect(() => {
+    const initializeWaldos = async () => {
+      if (!account) {
+        setIsInitializing(false);
+        return;
+      }
+
+      try {
+        const existingWaldos = await fetchExistingWaldos(client, account.address().hex());
+        
+        if (existingWaldos.length === 0) {
+          const locations = generateWaldoLocations(51.5074, -0.1278, 5);
+          
+          // Mint NFTs for each location - mintWaldoNFT now returns complete NFTAsset objects
+          const newNFTs = await Promise.all(
+            locations.map(location => mintWaldoNFT(client, account, location))
+          );
+          
+          setNfts(newNFTs);
+        } else {
+          setNfts(existingWaldos);
+        }
+      } catch (error) {
+        console.error('Error initializing Waldos:', error);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
+
+    initializeWaldos();
+  }, [account]);
 
   const handleNFTCollect = async (nftId: string) => {
+    if (!account) return;
+
     try {
-      // Here you would implement the NFT collection logic using Aptos
-      console.log('Collecting NFT:', nftId);
+      const success = await collectNFT(client, account, nftId);
+      
+      if (success) {
+        // Update the NFT's collected status locally
+        setNfts(currentNfts => currentNfts.map(nft => 
+          nft.id === nftId 
+            ? { ...nft, collectedTs: Date.now() }
+            : nft
+        ));
+      }
     } catch (error) {
       console.error('Error collecting NFT:', error);
+      // You might want to show an error message to the user here
     }
   };
+
+  if (!account) {
+    return <div>Failed to initialize Aptos account. Check your environment variables.</div>;
+  }
+
+  if (isInitializing) {
+    return <div>Initializing Waldos...</div>;
+  }
 
   return (
     <Container maxWidth="sm" sx={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
