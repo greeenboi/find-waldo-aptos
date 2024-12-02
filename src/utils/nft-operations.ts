@@ -55,7 +55,7 @@ export const mintWaldoNFT = async (
       name: 'Waldo',
       location,
       rarity: 'common',
-      imageUrl: `https://api.example.com/waldo?lat=${location.lat}&lng=${location.lng}`,
+      imageUrl: `https://avatars.githubusercontent.com/u/118198968?v=4`,
       collectedTs: undefined
     };
   } catch (error: any) {
