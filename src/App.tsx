@@ -132,7 +132,7 @@ const App: React.FC = () => {
       
       <BottomNavigation
         value={activeTab}
-        onChange={(event, newValue) => setActiveTab(newValue)}
+        onChange={(_event, newValue) => setActiveTab(newValue)}
         sx={{ position: 'sticky', bottom: 0, width: '100%' }}
       >
         <BottomNavigationAction
